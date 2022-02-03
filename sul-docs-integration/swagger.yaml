@@ -10,697 +10,707 @@ info:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   version: 1.0.0
-externalDocs:
-  description: Find out more about Swagger
-  url: http://swagger.io
 servers:
 - url: https://sul-server.herokuapp.com/api/
 tags:
 - name: account
-  description: All the account manipulations.
+  description: All the account data access.
 - name: users
-  description: All the users stuff. (CHANGE LATER)
+  description: User profile data access.
 - name: courses
   description: All the courses manipulations.
 - name: clientCourses
-  description: LATER CHANGE
+  description: User courses data access.
 - name: materials
-  description: Change it later!!!
+  description: Courses materials data access.
+- name: pendingCourses
+  description: Pending courses data access.
 paths:
-  /pet:
+  /account/login:
+    post:
+      tags:
+      - account
+      summary: Log In attempt & Getting auth tokens.
+      operationId: login
+      requestBody:
+        $ref: '#/components/requestBodies/AuthBody'
+      responses:
+        "200":
+          description: Successful login execution response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        "401":
+          description: Authorization error.
+  /account/logout:
+    get:
+      tags:
+      - account
+      summary: Log Out attempt & Cookie clearing.
+      operationId: logout
+      responses:
+        "200":
+          description: Successful log out.
+        "403":
+          $ref: '#/components/schemas/ForbiddenError'
+      security:
+      - jwtAuth: []
+  /account/refresh:
+    get:
+      tags:
+      - account
+      summary: Refresh auth tokens.
+      operationId: refresh
+      parameters:
+      - name: refreshToken
+        in: cookie
+        required: true
+        style: form
+        explode: true
+        schema:
+          $ref: '#/components/schemas/CommonToken'
+      responses:
+        "200":
+          description: Successful refresh execution response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        "403":
+          $ref: '#/components/schemas/ForbiddenError'
+  /users/{id}:
+    get:
+      tags:
+      - users
+      summary: User profile information access.
+      operationId: getProfileInformation
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          $ref: '#/components/schemas/CommonId'
+      responses:
+        "200":
+          description: Profile info received.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileInfo'
+        "403":
+          $ref: '#/components/schemas/ForbiddenError'
+      security:
+      - jwtAuth: []
+  /courses:
+    get:
+      tags:
+      - courses
+      summary: Get all courses info.
+      operationId: getAllCourses
+      responses:
+        "200":
+          description: Courses information received.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CourseInfo'
+        "403":
+          $ref: '#/components/schemas/ForbiddenError'
+      security:
+      - jwtAuth: []
+    post:
+      tags:
+      - courses
+      summary: Apply for a course.
+      operationId: applyCourse
+      responses:
+        "200":
+          description: LATER
+        "403":
+          description: LATER
+      security:
+      - jwtAuth: []
+  /courses/{id}:
+    get:
+      tags:
+      - courses
+      summary: Get course information by its ID.
+      operationId: getCourseById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          $ref: '#/components/schemas/CommonId'
+      responses:
+        "200":
+          description: Course information received.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseInfo'
+        "403":
+          $ref: '#/components/schemas/ForbiddenError'
+      security:
+      - jwtAuth: []
+  /courses/{id}/materials:
+    get:
+      tags:
+      - courses
+      - materials
+      summary: Get particular course materials.
+      operationId: getMaterials
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          $ref: '#/components/schemas/CommonId'
+      responses:
+        "200":
+          $ref: '#/components/responses/'
+        "403":
+          $ref: '#/components/schemas/ForbiddenError'
+      security:
+      - jwtAuth: []
+  /clientCourses:
+    get:
+      tags:
+      - clientCourses
+      summary: Get list of user courses.
+      operationId: getClientCourses
+      responses:
+        "200":
+          description: Client courses information received.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ClientCourse'
+        "403":
+          $ref: '#/components/schemas/ForbiddenError'
+      security:
+      - jwtAuth: []
+  /clientCourses/{id}:
+    get:
+      tags:
+      - clientCourses
+      summary: Get particular user course.
+      operationId: getClientCourseById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          $ref: '#/components/schemas/CommonId'
+      responses:
+        "200":
+          description: Client course information received.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientCourse'
+        "403":
+          $ref: '#/components/schemas/ForbiddenError'
+      security:
+      - jwtAuth: []
     put:
       tags:
-      - pet
-      summary: Update an existing pet
-      operationId: updatePet
-      requestBody:
-        $ref: '#/components/requestBodies/Pet'
+      - clientCourses
+      summary: "Mark the particular course as [passed] by its id."
+      operationId: passCourse
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          $ref: '#/components/schemas/CommonId'
       responses:
-        "400":
-          description: Invalid ID supplied
-        "404":
-          description: Pet not found
-        "405":
-          description: Validation exception
+        "200":
+          description: Course successfully passed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientCourse'
+        "403":
+          $ref: '#/components/schemas/ForbiddenError'
       security:
-      - petstore_auth:
-        - write:pets
-        - read:pets
-    post:
-      tags:
-      - pet
-      summary: Add a new pet to the store
-      operationId: addPet
-      requestBody:
-        $ref: '#/components/requestBodies/Pet'
-      responses:
-        "405":
-          description: Invalid input
-      security:
-      - petstore_auth:
-        - write:pets
-        - read:pets
-  /pet/findByStatus:
+      - jwtAuth: []
+  /clientCourses/{id}/start:
     get:
       tags:
-      - pet
-      summary: Finds Pets by status
-      description: Multiple status values can be provided with comma separated strings
-      operationId: findPetsByStatus
+      - clientCourses
+      summary: Start particular course.
+      operationId: startCourse
       parameters:
-      - name: status
-        in: query
-        description: Status values that need to be considered for filter
+      - name: id
+        in: path
         required: true
-        style: form
-        explode: true
+        style: simple
+        explode: false
         schema:
-          type: array
-          items:
-            type: string
-            default: available
-            enum:
-            - available
-            - pending
-            - sold
+          $ref: '#/components/schemas/CommonId'
       responses:
         "200":
-          description: successful operation
+          description: Course successfully started.
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Pet'
-            application/xml:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Pet'
-        "400":
-          description: Invalid status value
+                $ref: '#/components/schemas/inline_response_200'
+        "403":
+          $ref: '#/components/schemas/ForbiddenError'
       security:
-      - petstore_auth:
-        - write:pets
-        - read:pets
-  /pet/findByTags:
+      - jwtAuth: []
+  /clientCourses/{id}/finish:
     get:
       tags:
-      - pet
-      summary: Finds Pets by tags
-      description: "Muliple tags can be provided with comma separated strings. Use\\\
-        \ \\ tag1, tag2, tag3 for testing."
-      operationId: findPetsByTags
+      - clientCourses
+      summary: Finish particular course.
+      operationId: finishCourse
       parameters:
-      - name: tags
-        in: query
-        description: Tags to filter by
+      - name: id
+        in: path
         required: true
-        style: form
-        explode: true
+        style: simple
+        explode: false
         schema:
-          type: array
-          items:
-            type: string
+          $ref: '#/components/schemas/CommonId'
       responses:
         "200":
-          description: successful operation
+          description: Course successfully finished.
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Pet'
-            application/xml:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Pet'
-        "400":
-          description: Invalid tag value
-      deprecated: true
+                $ref: '#/components/schemas/inline_response_200_1'
+        "403":
+          $ref: '#/components/schemas/ForbiddenError'
       security:
-      - petstore_auth:
-        - write:pets
-        - read:pets
-  /pet/{petId}:
+      - jwtAuth: []
+  /clientCourses/{id}/test:
     get:
       tags:
-      - pet
-      summary: Find pet by ID
-      description: Returns a single pet
-      operationId: getPetById
+      - clientCourses
+      summary: Get course test.
+      operationId: getTest
       parameters:
-      - name: petId
+      - name: id
         in: path
-        description: ID of pet to return
         required: true
         style: simple
         explode: false
         schema:
-          type: integer
-          format: int64
+          $ref: '#/components/schemas/CommonId'
       responses:
         "200":
-          description: successful operation
+          description: Course test received successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Pet'
-            application/xml:
-              schema:
-                $ref: '#/components/schemas/Pet'
-        "400":
-          description: Invalid ID supplied
-        "404":
-          description: Pet not found
+                $ref: '#/components/schemas/Test'
+        "403":
+          $ref: '#/components/schemas/ForbiddenError'
       security:
-      - api_key: []
-    post:
-      tags:
-      - pet
-      summary: Updates a pet in the store with form data
-      operationId: updatePetWithForm
-      parameters:
-      - name: petId
-        in: path
-        description: ID of pet that needs to be updated
-        required: true
-        style: simple
-        explode: false
-        schema:
-          type: integer
-          format: int64
-      requestBody:
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/pet_petId_body'
-      responses:
-        "405":
-          description: Invalid input
-      security:
-      - petstore_auth:
-        - write:pets
-        - read:pets
-    delete:
-      tags:
-      - pet
-      summary: Deletes a pet
-      operationId: deletePet
-      parameters:
-      - name: api_key
-        in: header
-        required: false
-        style: simple
-        explode: false
-        schema:
-          type: string
-      - name: petId
-        in: path
-        description: Pet id to delete
-        required: true
-        style: simple
-        explode: false
-        schema:
-          type: integer
-          format: int64
-      responses:
-        "400":
-          description: Invalid ID supplied
-        "404":
-          description: Pet not found
-      security:
-      - petstore_auth:
-        - write:pets
-        - read:pets
-  /pet/{petId}/uploadImage:
-    post:
-      tags:
-      - pet
-      summary: uploads an image
-      operationId: uploadFile
-      parameters:
-      - name: petId
-        in: path
-        description: ID of pet to update
-        required: true
-        style: simple
-        explode: false
-        schema:
-          type: integer
-          format: int64
-      requestBody:
-        content:
-          application/octet-stream:
-            schema:
-              type: string
-              format: binary
-      responses:
-        "200":
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
-      security:
-      - petstore_auth:
-        - write:pets
-        - read:pets
-  /store/inventory:
+      - jwtAuth: []
+  /pendingCourses:
     get:
       tags:
-      - store
-      summary: Returns pet inventories by status
-      description: Returns a map of status codes to quantities
-      operationId: getInventory
+      - pendingCourses
+      summary: Get pending courses list.
+      operationId: getPendingCourses
       responses:
         "200":
-          description: successful operation
+          description: Pending courses list received successfully.
           content:
             application/json:
               schema:
-                type: object
-                additionalProperties:
-                  type: integer
-                  format: int32
+                $ref: '#/components/schemas/'
+        "403":
+          $ref: '#/components/schemas/ForbiddenError'
       security:
-      - api_key: []
-  /store/order:
-    post:
-      tags:
-      - store
-      summary: Place an order for a pet
-      operationId: placeOrder
-      requestBody:
-        description: order placed for purchasing the pet
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Order'
-        required: true
-      responses:
-        "200":
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Order'
-            application/xml:
-              schema:
-                $ref: '#/components/schemas/Order'
-        "400":
-          description: Invalid Order
-  /store/order/{orderId}:
-    get:
-      tags:
-      - store
-      summary: Find purchase order by ID
-      description: For valid response try integer IDs with value >= 1 and <= 10.\
-        \ Other values will generated exceptions
-      operationId: getOrderById
-      parameters:
-      - name: orderId
-        in: path
-        description: ID of pet that needs to be fetched
-        required: true
-        style: simple
-        explode: false
-        schema:
-          maximum: 10
-          minimum: 1
-          type: integer
-          format: int64
-      responses:
-        "200":
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Order'
-            application/xml:
-              schema:
-                $ref: '#/components/schemas/Order'
-        "400":
-          description: Invalid ID supplied
-        "404":
-          description: Order not found
-    delete:
-      tags:
-      - store
-      summary: Delete purchase order by ID
-      description: For valid response try integer IDs with positive integer value.\
-        \ Negative or non-integer values will generate API errors
-      operationId: deleteOrder
-      parameters:
-      - name: orderId
-        in: path
-        description: ID of the order that needs to be deleted
-        required: true
-        style: simple
-        explode: false
-        schema:
-          minimum: 1
-          type: integer
-          format: int64
-      responses:
-        "400":
-          description: Invalid ID supplied
-        "404":
-          description: Order not found
-  /user:
-    post:
-      tags:
-      - user
-      summary: Create user
-      description: This can only be done by the logged in user.
-      operationId: createUser
-      requestBody:
-        description: Created user object
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/User'
-        required: true
-      responses:
-        default:
-          description: successful operation
-  /user/createWithArray:
-    post:
-      tags:
-      - user
-      summary: Creates list of users with given input array
-      operationId: createUsersWithArrayInput
-      requestBody:
-        $ref: '#/components/requestBodies/UserArray'
-      responses:
-        default:
-          description: successful operation
-  /user/createWithList:
-    post:
-      tags:
-      - user
-      summary: Creates list of users with given input array
-      operationId: createUsersWithListInput
-      requestBody:
-        $ref: '#/components/requestBodies/UserArray'
-      responses:
-        default:
-          description: successful operation
-  /user/login:
-    get:
-      tags:
-      - user
-      summary: Logs user into the system
-      operationId: loginUser
-      parameters:
-      - name: username
-        in: query
-        description: The user name for login
-        required: true
-        style: form
-        explode: true
-        schema:
-          type: string
-      - name: password
-        in: query
-        description: The password for login in clear text
-        required: true
-        style: form
-        explode: true
-        schema:
-          type: string
-      responses:
-        "200":
-          description: successful operation
-          headers:
-            X-Rate-Limit:
-              description: calls per hour allowed by the user
-              style: simple
-              explode: false
-              schema:
-                type: integer
-                format: int32
-            X-Expires-After:
-              description: date in UTC when token expires
-              style: simple
-              explode: false
-              schema:
-                type: string
-                format: date-time
-          content:
-            application/json:
-              schema:
-                type: string
-            application/xml:
-              schema:
-                type: string
-        "400":
-          description: Invalid username/password supplied
-  /user/logout:
-    get:
-      tags:
-      - user
-      summary: Logs out current logged in user session
-      operationId: logoutUser
-      responses:
-        default:
-          description: successful operation
-  /user/{username}:
-    get:
-      tags:
-      - user
-      summary: Get user by user name
-      operationId: getUserByName
-      parameters:
-      - name: username
-        in: path
-        description: The name that needs to be fetched. Use user1 for testing.
-        required: true
-        style: simple
-        explode: false
-        schema:
-          type: string
-      responses:
-        "200":
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-            application/xml:
-              schema:
-                $ref: '#/components/schemas/User'
-        "400":
-          description: Invalid username supplied
-        "404":
-          description: User not found
-    put:
-      tags:
-      - user
-      summary: Updated user
-      description: This can only be done by the logged in user.
-      operationId: updateUser
-      parameters:
-      - name: username
-        in: path
-        description: name that need to be updated
-        required: true
-        style: simple
-        explode: false
-        schema:
-          type: string
-      requestBody:
-        description: Updated user object
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/User'
-        required: true
-      responses:
-        "400":
-          description: Invalid user supplied
-        "404":
-          description: User not found
-    delete:
-      tags:
-      - user
-      summary: Delete user
-      description: This can only be done by the logged in user.
-      operationId: deleteUser
-      parameters:
-      - name: username
-        in: path
-        description: The name that needs to be deleted
-        required: true
-        style: simple
-        explode: false
-        schema:
-          type: string
-      responses:
-        "400":
-          description: Invalid username supplied
-        "404":
-          description: User not found
+      - jwtAuth: []
 components:
   schemas:
-    Order:
+    TokenResponse:
       type: object
       properties:
-        id:
-          type: integer
-          format: int64
-        petId:
-          type: integer
-          format: int64
-        quantity:
-          type: integer
-          format: int32
-        shipDate:
-          type: string
-          format: date-time
-        status:
-          type: string
-          description: Order Status
-          enum:
-          - placed
-          - approved
-          - delivered
-        complete:
-          type: boolean
-          default: false
-      xml:
-        name: Order
-    Category:
+        accessToken:
+          $ref: '#/components/schemas/CommonToken'
+        refreshToken:
+          $ref: '#/components/schemas/CommonToken'
+    LoginResponse:
       type: object
       properties:
-        id:
-          type: integer
-          format: int64
+        accessToken:
+          $ref: '#/components/schemas/CommonToken'
+        refreshToken:
+          $ref: '#/components/schemas/CommonToken'
+        _id:
+          $ref: '#/components/schemas/CommonId'
+        username:
+          type: string
+          example: user
+        email:
+          type: string
+          example: user@itechart-group.com
+        role:
+          type: string
+          example: employee
+        firstName:
+          type: string
+          example: User
+        lastName:
+          type: string
+          example: User
+        position:
+          type: string
+          example: Software Engineer
+        skills:
+          type: array
+          items:
+            $ref: '#/components/schemas/Skill'
+        group:
+          type: string
+          example: U4.D4.mocked
+        employees:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        pendingCourses:
+          type: array
+          items:
+            type: string
+            example: _id
+        avatar:
+          type: string
+          example: https://image-url.zone
+        birthday:
+          type: string
+          example: 1970-01-01T00:00:00Z
+        skype:
+          type: string
+          example: user
+        phone:
+          type: string
+          example: +375(33)26535213
+    ProfileInfo:
+      type: object
+      properties:
+        _id:
+          $ref: '#/components/schemas/CommonId'
+        username:
+          type: string
+          example: user
+        email:
+          type: string
+          example: user@itechart-group.com
+        role:
+          type: string
+          example: employee
+        firstName:
+          type: string
+          example: User
+        lastName:
+          type: string
+          example: User
+        position:
+          type: string
+          example: Software Engineer
+        skills:
+          type: array
+          items:
+            $ref: '#/components/schemas/Skill'
+        group:
+          type: string
+          example: U4.D4.mocked
+        employees:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        pendingCourses:
+          type: array
+          items:
+            $ref: '#/components/schemas/CourseInfo'
+        avatar:
+          type: string
+          example: https://image-url.zone
+        birthday:
+          type: string
+          example: 1970-01-01T00:00:00Z
+        skype:
+          type: string
+          example: user
+        phone:
+          type: string
+          example: +375(33)2635213
+        managerId:
+          $ref: '#/components/schemas/CommonId'
+    UnauthorizedError:
+      type: string
+      description: Authorization error
+      example: Unauthorized
+    ForbiddenError:
+      type: string
+      description: Access forbidden.
+      example: Error message.
+    AuthBody:
+      required:
+      - login
+      - password
+      type: object
+      properties:
+        login:
+          type: string
+          example: user
+        password:
+          type: string
+          example: user
+    Skill:
+      required:
+      - _id
+      - name
+      - score
+      type: object
+      properties:
+        _id:
+          $ref: '#/components/schemas/CommonId'
         name:
           type: string
-      xml:
-        name: Category
+          example: js
+        image:
+          type: string
+          example: https://i.imgur.com/S2lYrKD.gif
+        score:
+          type: integer
+          example: 3
+    Course:
+      type: object
+      properties:
+        _id:
+          $ref: '#/components/schemas/CommonId'
+        title:
+          type: string
+          example: JS for beginners
+        description:
+          type: string
+          example: Basic course for beginners
+        technology:
+          type: array
+          example:
+          - js
+          - html
+          - css
+          items:
+            type: string
+        requiredSkills:
+          type: array
+          example:
+          - html
+          - css
+          items:
+            type: string
+        duration:
+          type: integer
+          example: 123124679
+        materials:
+          $ref: '#/components/schemas/Material'
+        lessons:
+          type: integer
+          example: 0
+        test:
+          $ref: '#/components/schemas/CommonId'
+    CourseInfo:
+      type: object
+      properties:
+        _id:
+          $ref: '#/components/schemas/CommonId'
+        title:
+          type: string
+          example: JS for beginners
+        description:
+          type: string
+          example: Basic course for beginners
+        technology:
+          type: array
+          example:
+          - js
+          - html
+          - css
+          items:
+            type: string
+        requiredSkills:
+          type: array
+          example:
+          - html
+          - css
+          items:
+            type: string
+        duration:
+          type: integer
+          example: 123124679
+        lessons:
+          type: integer
+          example: 0
+        test:
+          $ref: '#/components/schemas/CommonId'
+    Material:
+      type: string
+      example: TO DO LATER
     User:
       type: object
       properties:
-        id:
-          type: integer
-          format: int64
-        username:
+        prop:
           type: string
-        firstName:
-          type: string
-        lastName:
-          type: string
-        email:
-          type: string
-        password:
-          type: string
-        phone:
-          type: string
-        userStatus:
-          type: integer
-          description: User Status
-          format: int32
-      xml:
-        name: User
-    Tag:
+          description: das
+    Test:
       type: object
       properties:
-        id:
-          type: integer
-          format: int64
-        name:
+        later:
           type: string
-      xml:
-        name: Tag
-    Pet:
-      required:
-      - name
-      - photoUrls
+          example: LATER!
+    ClientCourse:
       type: object
       properties:
-        id:
-          type: integer
-          format: int64
-        category:
-          $ref: '#/components/schemas/Category'
-        name:
-          type: string
-          example: doggie
-        photoUrls:
-          type: array
-          xml:
-            name: photoUrl
-            wrapped: true
-          items:
-            type: string
-        tags:
-          type: array
-          xml:
-            name: tag
-            wrapped: true
-          items:
-            $ref: '#/components/schemas/Tag'
+        _id:
+          $ref: '#/components/schemas/CommonId'
+        user:
+          $ref: '#/components/schemas/CommonId'
+        course:
+          $ref: '#/components/schemas/Course'
         status:
           type: string
-          description: pet status in the store
-          enum:
-          - available
-          - pending
-          - sold
-      xml:
-        name: Pet
-    ApiResponse:
+          example: pending
+        progress:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProgressStage'
+    CommonToken:
+      type: string
+      example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+    CommonId:
+      type: string
+      example: 61f944b7a91736d7260f1ee3
+    ProgressStage:
       type: object
       properties:
-        code:
-          type: integer
-          format: int32
-        type:
+        stage:
           type: string
-        message:
-          type: string
-    pet_petId_body:
+          example: "2"
+        isComleted:
+          type: boolean
+          example: true
+        _id:
+          $ref: '#/components/schemas/CommonId'
+    inline_response_200:
       type: object
       properties:
-        name:
-          type: string
-          description: Updated name of the pet
-        status:
-          type: string
-          description: Updated status of the pet
-  requestBodies:
-    Pet:
-      description: Pet object that needs to be added to the store
+        start:
+          type: boolean
+          example: true
+    inline_response_200_1:
+      type: object
+      properties:
+        finish:
+          type: boolean
+          example: true
+  responses:
+    LoginResponseSuccess:
+      description: Successful login execution response.
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Pet'
-        application/xml:
+            $ref: '#/components/schemas/LoginResponse'
+    RefreshResponseSuccess:
+      description: Successful refresh execution response.
+      content:
+        application/json:
           schema:
-            $ref: '#/components/schemas/Pet'
-      required: true
-    UserArray:
-      description: List of user object
+            $ref: '#/components/schemas/TokenResponse'
+    ProfileInfoResponseSuccess:
+      description: Profile info received.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProfileInfo'
+    CourseInfoResponseSuccess:
+      description: Course information received.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CourseInfo'
+    AllCoursesResponseSuccess:
+      description: Courses information received.
       content:
         application/json:
           schema:
             type: array
             items:
-              $ref: '#/components/schemas/User'
-      required: true
+              $ref: '#/components/schemas/CourseInfo'
+    ClientCourseResponseSuccess:
+      description: Client course information received.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ClientCourse'
+    AllClientCoursesResponseSuccess:
+      description: Client courses information received.
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/ClientCourse'
+    StartCourseResponseSuccess:
+      description: Course successfully started.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/inline_response_200'
+    FinishCourseResponseSuccess:
+      description: Course successfully finished.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/inline_response_200_1'
+    PassCourseResponseSuccess:
+      description: Course successfully passed.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ClientCourse'
+    GetTestResponseSuccess:
+      description: Course test received successfully.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Test'
+    GetPendingCoursesResponseSuccess:
+      description: Pending courses list received successfully.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/'
+  requestBodies:
+    AuthBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AuthBody'
   securitySchemes:
-    petstore_auth:
-      type: oauth2
-      flows:
-        implicit:
-          authorizationUrl: http://petstore.swagger.io/oauth/dialog
-          scopes:
-            write:pets: modify pets in your account
-            read:pets: read your pets
-    api_key:
-      type: apiKey
-      name: api_key
-      in: header
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
